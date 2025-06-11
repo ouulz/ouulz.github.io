@@ -98,31 +98,17 @@ service-worker: true
 
 # Friends
 friends: [
-        {
-            "category": "Writing & Blogs",
-            "description": "Great writing platforms and personal blogs",
-            "links": [
-                {
-                    "title": "简书",
-                    "href": "https://www.jianshu.com/u/7a6207548917",
-                    "style": "color: green;"
-                }
-            ]
-        },
-        {
-            "category": "Technology & Development",
-            "description": "Tech companies and developer resources",
-            "links": [
-                {
-                    "title": "Apple",
-                    "href": "https://apple.com",
-                    "style": "color: green;"
-                },
-                {
-                    "title": "Apple Developer",
-                    "href": "https://developer.apple.com/",
-                    "style": "color: green;"
-                }
-            ]
-        }
-    ]
+    {
+        title: "简书",
+        href: "https://www.jianshu.com/u/7a6207548917"
+    },{
+        title: "Apple",
+        href: "https://apple.com"
+    },{
+        title: "Apple Developer",
+        href: "https://developer.apple.com/"
+    },{
+        title: "林北",
+        href: "https://www.linbei.xyz/"
+    }
+]
