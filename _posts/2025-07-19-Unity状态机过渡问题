@@ -1,0 +1,68 @@
+---
+layout:     post
+title:      🎮 Unity动画状态机大坑！跳跃动画总是闪现Idle？
+subtitle:   Unity学习
+date:       2025-07-18
+author:     ouulz
+header-img: 
+catalog: true
+tags:
+    - Unity学习
+---
+# 🎮 **Unity动画状态机大坑！跳跃动画总是闪现Idle？**  
+
+## 🔍 **问题现象：你的角色跳跃动画在“抽风”？**  
+在开发2D平台游戏时，我遇到了一个让人抓狂的Bug：  
+- **角色跳跃时**：先播放`Jump`动画，但在空中会**突然闪现一下Idle**，然后才切换成`Air`下落动画！  
+- **更诡异的是**：如果删掉`Air`动画，`Jump`反而能**完整播放到落地**！  
+- **这科学吗？？？** 🤯  
+
+经过一通爆肝调试，终于发现——**问题出在动画状态机的“隐式打断”**！  
+
+---
+
+## 🕵️‍♂️ **罪魁祸首：Trigger和Bool的“宫斗戏”**  
+### **1. `Jump`（Trigger）和 `Air`（Bool）的优先级问题**  
+- `Jump`动画用`Trigger`触发（一次性），`Air`动画用`Bool`控制（持续性）。  
+- **Unity的潜规则**：`Bool`参数的优先级比`Trigger`高！  
+- **结果**：如果`Air=true`设置得稍晚，`Jump`播完后会**被系统强制踢回Idle**，等`Air`生效再切换，导致“闪现”现象！  
+
+### **2. 动画状态机“缺条路”**  
+- 如果`Jump` → `Air`的过渡没配好（比如漏了`Has Exit Time`），Unity会**自动抄近路回Idle**！  
+
+---
+
+## 🛠️ **终极解决方案：锁死Jump的退出条件！**  
+### **方法1：让`Jump`必须等`Air`来接盘**  
+```csharp
+// 跳跃代码（关键修改！）
+private void Jump() {
+    if (Input.GetKeyDown(KeyCode.Space) && isGround) {
+        rb.AddForce(Vector2.up * jumpForce);
+        anim.SetTrigger("Jump");
+        anim.SetBool("IsAir", true); // 关键！跳跃时立刻标记为空中状态
+    }
+}
+```  
+**Animator配置**：  
+- 在`Jump` → `Air`的过渡箭头上：  
+  ✅ **取消勾选`Has Exit Time`**（不等播完就切）  
+  ✅ **过渡时间=0**（无缝衔接）  
+  ✅ **条件：`IsAir = true`**  
+
+### **方法2：物理防抖（防射线检测抽风）**  
+```csharp
+private void CheckGround() {
+    // 用BoxCast替代Linecast，检测更稳！
+    Vector2 boxSize = new Vector2(0.5f, 0.1f); // 宽度和高度
+    isGround = Physics2D.BoxCast(transform.position, boxSize, 0, Vector2.down, 0.2f, groundLayer);
+    Debug.DrawRay(transform.position, Vector2.down * 0.2f, Color.red); // 画红线debug
+}
+```  
+
+---
+
+## 🎯 **验证成果**  
+1. **日志大法**：打印当前动画状态，确认`Jump`直接切`Air`，无`Idle`插入。  
+2. **Animator窗口盯梢**：运行时打开Animator，观察状态切换是否丝滑。  
+3. **删`Air`动画测试**：如果`Jump`能播到底，说明问题100%是`Air`的锅！  
